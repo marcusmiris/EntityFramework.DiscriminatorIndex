@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity.Core.Metadata.Edm;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.ModelConfiguration.Conventions;
@@ -26,7 +27,9 @@ namespace EntityFramework.DiscriminatorIndex
 
         #endregion
 
-        public void Apply(EntitySet item, DbModel model)
+        #region ' IStoreModelConvention<EntitySet> '
+
+        public void Apply(EntitySet item, DbModel dbModel)
         {
             // Somente continua o processamento se o Set conter discriminator.
             var elementType = item.ElementType;
@@ -34,14 +37,8 @@ namespace EntityFramework.DiscriminatorIndex
 
             // Verifica se a anotação de criação de indice já existe.
             // Caso exista, não adiciona novamente.
-            {
-                var entityType = model.ConceptualModel.EntityTypes.SingleOrDefault(e => e.Name.Equals(elementType.Name));
-                var entityTypeConfiguration = entityType?.MetadataProperties["Configuration"]?.Value;
-                var annotations = entityTypeConfiguration.GetPrivateFieldValue(@"Annotations") as Dictionary<string, object>;
-                var indiceJahCriado = annotations == null || annotations.ContainsKey(DiscriminatorIndexAnnotation.AnnotationName);
-                //
-                if (indiceJahCriado) return;
-            }
+            if (IndiceJahCriado(elementType.Name, dbModel))
+                return;
 
             // Cria a anotação para criação de índice.
             {
@@ -52,6 +49,23 @@ namespace EntityFramework.DiscriminatorIndex
                     name: annotationName, 
                     value: new DiscriminatorIndexAnnotation(newIndexName, _discriminatorColumnName));
             }
+        }
+
+        #endregion
+
+        /// <summary>
+        ///     Verifica se já existe um índice sobre a coluna discriminator.
+        /// </summary>
+        private bool IndiceJahCriado(string elementTypeName, DbModel dbModel)
+        {
+            var entityType = dbModel.ConceptualModel.EntityTypes.SingleOrDefault(e => e.Name.Equals(elementTypeName));
+            var entityTypeConfiguration = entityType?.MetadataProperties.Contains("Configuration") == true
+                ? entityType.MetadataProperties["Configuration"].Value
+                : null;
+            var annotations = entityTypeConfiguration?.GetPrivateFieldValue(@"Annotations") as Dictionary<string, object>;
+            var indiceJahCriado = annotations != null && annotations.ContainsKey(DiscriminatorIndexAnnotation.AnnotationName);
+            //
+            return indiceJahCriado;
         }
     }
 }
