@@ -92,8 +92,8 @@ namespace EntityFramework.DiscriminatorIndex
         {
             var type = compositeResolver.GetType();
 
-            var first = (IDbDependencyResolver) type.GetProperty("First").GetValue(compositeResolver);
-            var second = (IDbDependencyResolver)type.GetProperty("Second").GetValue(compositeResolver);
+            var first = (IDbDependencyResolver) type.GetProperty("First").GetValue(compositeResolver, null);
+            var second = (IDbDependencyResolver)type.GetProperty("Second").GetValue(compositeResolver, null);
 
             return GetInternalResolvers(first)
                 .Concat(GetInternalResolvers(second));
@@ -103,7 +103,7 @@ namespace EntityFramework.DiscriminatorIndex
             IDbDependencyResolver resolverChain)
         {
             var type = resolverChain.GetType();
-            var resolvers = (IEnumerable<IDbDependencyResolver>) type.GetProperty(@"Resolvers").GetValue(resolverChain);
+            var resolvers = (IEnumerable<IDbDependencyResolver>) type.GetProperty(@"Resolvers").GetValue(resolverChain, null);
 
             return resolvers.SelectMany(GetInternalResolvers);
         }
