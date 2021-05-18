@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.ModelConfiguration;
+using System.Linq;
 using System.Reflection;
 
 namespace EntityFramework.DiscriminatorIndex
@@ -24,7 +25,8 @@ namespace EntityFramework.DiscriminatorIndex
         public static void ConfigureSqlGeneratorForAllProviders(
             this DbMigrationsConfiguration migrationConfiguration)
         {
-            var providers = migrationConfiguration.GetAvailableProviders();
+            // Get Providers as copied list, the iteration edits the underlying enumerable
+            var providers = migrationConfiguration.GetAvailableProviders().ToList();
             foreach (var providerName in providers)
             {
                 var currentSqlGenerator = migrationConfiguration.GetSqlGenerator(providerName);
